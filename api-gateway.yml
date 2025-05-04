@@ -38,6 +38,26 @@ spring:
           filters:
             # Rewrite to /stores?mallId={mallId}
             - RewritePath=/api/v1/malls/(?<mallId>.*)/stores, /stores?mallId=${mallId}
+        - id: store-service-stores # Mağazaları listeleyen veya yeni mağaza ekleyen endpoint (/stores)
+          uri: lb://STORE-SERVICE # store-service'in Eureka'daki adı
+          predicates:
+            - Path=/api/v1/stores/** # Bu path ile başlayan istekleri yakala
+          filters:
+            - RewritePath=/api/v1/(?<segment>.*), /$\{segment} # /api/v1 kısmını kaldırıp store-service'e ilet
+        - id: store-service-mall-stores # Bir AVM'ye ait mağazaları listeleyen endpoint (/malls/{mallId}/stores)
+          uri: lb://STORE-SERVICE
+          predicates:
+            - Path=/api/v1/malls/{mallId}/stores/** # Bu path ile başlayan istekleri yakala
+          filters:
+            # Path'i store-service'in anlayacağı formata çevir: /malls/{mallId}/stores -> /malls/{mallId}/stores
+            # Bu durumda RewritePath'e gerek yok gibi görünüyor, ancak Gateway'in base path'i varsa veya
+            # store-service farklı bir path bekliyorsa ayarlama gerekebilir. Şimdilik basit tutalım.
+            # Eğer store-service /malls/{mallId}/stores şeklinde bekliyorsa RewritePath gerekmez.
+            # Eğer store-service sadece /stores?mallId={mallId} gibi bekliyorsa farklı bir filter gerekir.
+            # Mevcut StoreController /malls/{mallId}/stores şeklinde bekliyor, bu yüzden rewrite şimdilik gereksiz.
+            - RewritePath=/api/v1/malls/(?<mallId>.*)/stores/(?<segment>.*), /malls/$\{mallId}/stores/$\{segment}
+            # Alternatif olarak store-service'in beklentisine göre:
+            # - RewritePath=/api/v1/malls/(?<mallId>.*)/stores(?<remaining>/?.*), /stores?mallId=$\\{mallId}\\{remaining}
 
 
       # Optional: Default filters applied to all routes

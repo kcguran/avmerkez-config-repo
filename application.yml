@@ -1,0 +1,34 @@
+# Default configurations for all services
+
+# Eureka Client Configuration (Common for most services)
+eureka:
+  client:
+    service-url:
+      # Point to the Discovery Server (Can be overridden per environment)
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+
+# Default Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        # Common endpoints to expose by default
+        include: health, info, prometheus, metrics
+  # Enable Prometheus metrics endpoint
+  endpoint:
+    health:
+      show-details: when_authorized # or always
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+
+# Default Logging Configuration (Example)
+logging:
+  level:
+    root: INFO
+    com.avmerkez: DEBUG # Package specific logging level 

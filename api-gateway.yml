@@ -1,0 +1,44 @@
+# API Gateway specific configurations
+
+server:
+  port: 8080 # Gateway port
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      # Route definitions
+      routes:
+        - id: mall_service_route
+          # lb://<service-id> - Service ID should match spring.application.name of the target service
+          uri: lb://mall-service
+          predicates:
+            # Match requests starting with /api/v1/malls
+            - Path=/api/v1/malls/**
+          filters:
+            # Remove the /api/v1 prefix before forwarding to mall-service
+            - RewritePath=/api/v1/(?<segment>.*), /${segment}
+        # Add routes for other services here (e.g., store-service, user-service)
+        # - id: store_service_route
+        #   uri: lb://store-service
+        #   predicates:
+        #     - Path=/api/v1/stores/**, /api/v1/malls/.*/stores/**
+        #   filters:
+        #     - RewritePath=/api/v1/(?<segment>.*), /${segment}
+
+      # Optional: Default filters applied to all routes
+      # default-filters:
+      #   - name: Retry
+      #     args:
+      #       retries: 3
+      #       statuses: BAD_GATEWAY
+
+# Expose gateway specific actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, gateway, prometheus, metrics 

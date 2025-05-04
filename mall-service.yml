@@ -7,12 +7,10 @@ server:
 # Datasource Configuration
 spring:
   datasource:
-    # Use environment variables or profiles for production secrets
-    url: jdbc:postgresql://localhost:5432/mall_db # Example for local dev
-    username: user # Example for local dev
-    password: password # Example for local dev
+    url: jdbc:postgresql://postgres_db:5432/mall_db
+    username: user
+    password: password
     driver-class-name: org.postgresql.Driver
-    # Connection pool settings (HikariCP is default)
     hikari:
       connection-timeout: 20000
       maximum-pool-size: 10

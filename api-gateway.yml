@@ -13,21 +13,32 @@ spring:
       # Route definitions
       routes:
         - id: mall_service_route
-          # lb://<service-id> - Service ID should match spring.application.name of the target service
           uri: lb://mall-service
           predicates:
-            # Match requests starting with /api/v1/malls
             - Path=/api/v1/malls/**
           filters:
-            # Remove the /api/v1 prefix before forwarding to mall-service
             - RewritePath=/api/v1/(?<segment>.*), /${segment}
-        # Add routes for other services here (e.g., store-service, user-service)
-        # - id: store_service_route
-        #   uri: lb://store-service
-        #   predicates:
-        #     - Path=/api/v1/stores/**, /api/v1/malls/.*/stores/**
-        #   filters:
-        #     - RewritePath=/api/v1/(?<segment>.*), /${segment}
+        - id: store_service_route_by_id
+          uri: lb://store-service # store-service'in Eureka ID'si
+          predicates:
+            - Path=/api/v1/stores/{id} # Mağazaları ID ile getirme/güncelleme/silme
+          filters:
+            - RewritePath=/api/v1/(?<segment>.*), /${segment}
+        - id: store_service_route_list
+          uri: lb://store-service
+          predicates:
+            - Path=/api/v1/stores # Tüm mağazaları veya AVM ID ile filtrelenmişleri listeleme
+            - Query=mallId # mallId query parametresi varsa veya yoksa bu route'a girer
+          filters:
+            - RewritePath=/api/v1/(?<segment>.*), /${segment}
+        - id: store_service_route_by_mall # /api/v1/malls/{mallId}/stores gibi
+          uri: lb://store-service
+          predicates:
+            - Path=/api/v1/malls/{mallId}/stores
+          filters:
+            # Rewrite to /stores?mallId={mallId}
+            - RewritePath=/api/v1/malls/(?<mallId>.*)/stores, /stores?mallId=${mallId}
+
 
       # Optional: Default filters applied to all routes
       # default-filters:

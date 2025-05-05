@@ -18,6 +18,7 @@ spring:
             - Path=/api/v1/malls/**
           filters:
             - RewritePath=/api/v1/(?<segment>.*), /${segment}
+            - StripPrefix=2
         - id: store_service_route_by_id
           uri: lb://store-service # store-service'in Eureka ID'si
           predicates:

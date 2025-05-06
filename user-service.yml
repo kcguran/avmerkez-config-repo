@@ -1,0 +1,44 @@
+spring:
+  datasource:
+    # Use Docker service name for hostname
+    url: jdbc:postgresql://postgres:5432/user_db # Dedicated DB for user service
+    username: user
+    password: password # Fetch from environment variables or Vault in production
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate # Use validate in prod, create-drop or update in dev/test
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    # baseline-on-migrate: true # Enable if running against an existing schema
+
+# Eureka Client Configuration (Overrides local application.yml)
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://discovery-server:8761/eureka/}
+  instance:
+    # instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    prefer-ip-address: true
+
+# JWT Secret and Expiration - !! IMPORTANT: Use secure values and management !!
+avmerkez:
+  app:
+    jwtSecret: ${JWT_SECRET:c2VjcmV0IGtleSBtdXN0IGJlIGxvbmcgdGhhbiAyNTYgYml0cw==} # Use environment variable or Vault
+    jwtExpirationMs: ${JWT_EXPIRATION_MS:3600000} # 1 hour from env or default
+
+# Server port (0 for random, or set specific port)
+server:
+  port: 0
+
+# Logging level example
+logging:
+  level:
+    com.avmerkez.userservice: DEBUG
+    org.springframework.security: INFO

@@ -4,8 +4,9 @@ server:
   port: 8080 # Gateway port
   
 avmerkez:
-      app:
-        jwtSecret: ${JWT_SECRET:c2VjcmV0IGtleSBtdXN0IGJlIGxvbmcgdGhhbiAyNTYgYml0cw==} # user-service ile aynı olmalı
+  app:
+    jwtSecret: ${JWT_SECRET:c2VjcmV0IGtleSBtdXN0IGJlIGxvbmcgdGhhbiAyNTYgYml0cw==} # Use environment variable or Vault
+    jwtExpirationMs: ${JWT_EXPIRATION_MS:3600000} # 1 hour from env or default
 
 spring:
   cloud:

@@ -2,6 +2,10 @@
 
 server:
   port: 8080 # Gateway port
+  
+avmerkez:
+      app:
+        jwtSecret: ${JWT_SECRET:c2VjcmV0IGtleSBtdXN0IGJlIGxvbmcgdGhhbiAyNTYgYml0cw==} # user-service ile aynı olmalı
 
 spring:
   cloud:

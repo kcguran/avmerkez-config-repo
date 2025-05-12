@@ -34,6 +34,14 @@ management:
     prometheus:
       enabled: true
 
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: method
+
 # Default Logging Configuration (Example)
 logging:
   level:

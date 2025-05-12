@@ -1,12 +1,8 @@
-# API Gateway specific configurations
+# API Gateway Configuration
+# This file should be added to the Git repository used by the Config Server
 
 server:
-  port: 8080 # Gateway port
-  
-avmerkez:
-  app:
-    jwtSecret: ${JWT_SECRET:c2VjcmV0IGtleSBtdXN0IGJlIGxvbmcgdGhhbiAyNTYgYml0cw==} # Use environment variable or Vault
-    jwtExpirationMs: ${JWT_EXPIRATION_MS:3600000} # 1 hour from env or default
+  port: 8080
 
 spring:
   cloud:
@@ -15,67 +11,127 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
-      # Route definitions
       routes:
-        - id: mall_service_route
+        # User Service Routes
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            - RewritePath=/api/(?<segment>.*), /$\{segment}
+
+        # Mall Service Routes
+        - id: mall-service
           uri: lb://mall-service
           predicates:
             - Path=/api/v1/malls/**
           filters:
-            - RewritePath=/api/v1/(?<segment>.*), /${segment}
-            - StripPrefix=2
-        - id: store_service_route_by_id
-          uri: lb://store-service # store-service'in Eureka ID'si
-          predicates:
-            - Path=/api/v1/stores/{id} # Mağazaları ID ile getirme/güncelleme/silme
-          filters:
-            - RewritePath=/api/v1/(?<segment>.*), /${segment}
-        - id: store_service_route_list
+            - RewritePath=/api/(?<segment>.*), /$\{segment}
+            
+        # Store Service Routes
+        - id: store-service
           uri: lb://store-service
           predicates:
-            - Path=/api/v1/stores # Tüm mağazaları veya AVM ID ile filtrelenmişleri listeleme
-            - Query=mallId # mallId query parametresi varsa veya yoksa bu route'a girer
+            - Path=/api/v1/categories/**,/api/v1/brands/**,/api/v1/stores/**
           filters:
-            - RewritePath=/api/v1/(?<segment>.*), /${segment}
-        - id: store_service_route_by_mall # /api/v1/malls/{mallId}/stores gibi
-          uri: lb://store-service
+            - RewritePath=/api/(?<segment>.*), /$\{segment}
+            
+        # Review Service Routes
+        - id: review-service
+          uri: lb://review-service
           predicates:
-            - Path=/api/v1/malls/{mallId}/stores
+            - Path=/api/v1/reviews/**
           filters:
-            # Rewrite to /stores?mallId={mallId}
-            - RewritePath=/api/v1/malls/(?<mallId>.*)/stores, /stores?mallId=${mallId}
-        - id: store-service-stores # Mağazaları listeleyen veya yeni mağaza ekleyen endpoint (/stores)
-          uri: lb://STORE-SERVICE # store-service'in Eureka'daki adı
+            - RewritePath=/api/(?<segment>.*), /$\{segment}
+
+        # Swagger UI Routes
+        - id: openapi
+          uri: lb://api-gateway
           predicates:
-            - Path=/api/v1/stores/** # Bu path ile başlayan istekleri yakala
+            - Path=/v3/api-docs/**
           filters:
-            - RewritePath=/api/v1/(?<segment>.*), /$\{segment} # /api/v1 kısmını kaldırıp store-service'e ilet
-        - id: store-service-mall-stores # Bir AVM'ye ait mağazaları listeleyen endpoint (/malls/{mallId}/stores)
-          uri: lb://STORE-SERVICE
-          predicates:
-            - Path=/api/v1/malls/{mallId}/stores/** # Bu path ile başlayan istekleri yakala
-          filters:
-            # Path'i store-service'in anlayacağı formata çevir: /malls/{mallId}/stores -> /malls/{mallId}/stores
-            # Bu durumda RewritePath'e gerek yok gibi görünüyor, ancak Gateway'in base path'i varsa veya
-            # store-service farklı bir path bekliyorsa ayarlama gerekebilir. Şimdilik basit tutalım.
-            # Eğer store-service /malls/{mallId}/stores şeklinde bekliyorsa RewritePath gerekmez.
-            # Eğer store-service sadece /stores?mallId={mallId} gibi bekliyorsa farklı bir filter gerekir.
-            # Mevcut StoreController /malls/{mallId}/stores şeklinde bekliyor, bu yüzden rewrite şimdilik gereksiz.
-            - RewritePath=/api/v1/malls/(?<mallId>.*)/stores/(?<segment>.*), /malls/$\{mallId}/stores/$\{segment}
-            # Alternatif olarak store-service'in beklentisine göre:
-            # - RewritePath=/api/v1/malls/(?<mallId>.*)/stores(?<remaining>/?.*), /stores?mallId=$\\{mallId}\\{remaining}
+            - RewritePath=/v3/api-docs/(?<segment>.*), /$\{segment}/v3/api-docs
 
+# API Gateway Security Configuration
+avmerkez:
+  app:
+    jwtSecret: ${JWT_SECRET:changeitChangeitChangeitChangeitChangeitChangeitChangeitChangeit}
+    jwtCookieName: avm_jwt
+    jwtIssuer: avmerkez-user-service
+    jwtAudience: avmerkez-api
 
-      # Optional: Default filters applied to all routes
-      # default-filters:
-      #   - name: Retry
-      #     args:
-      #       retries: 3
-      #       statuses: BAD_GATEWAY
+# CORS Configuration
+cors:
+  allowed-origins: "*"
+  allowed-methods: GET, POST, PUT, DELETE, OPTIONS
+  allowed-headers: "*"
+  exposed-headers: Authorization
+  allow-credentials: true
+  max-age: 3600
 
-# Expose gateway specific actuator endpoints
+# Circuit Breaker Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      default:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 5s
+        failureRateThreshold: 50
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+# Log levels
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: INFO
+    org.springframework.cloud.gateway.route.RouteDefinitionLocator: INFO
+    reactor.netty: INFO
+
+# Enable detailed health info
 management:
   endpoints:
     web:
       exposure:
-        include: health, info, gateway, prometheus, metrics 
+        include: health, info, gateway, prometheus
+  endpoint:
+    gateway:
+      enabled: true
+    health:
+      show-details: when_authorized
+
+
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://discovery-server:8761/eureka
+  instance:
+    prefer-ip-address: true
+
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: INFO
+
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+eureka:
+  instance:
+    secure-port-enabled: true
+    non-secure-port-enabled: false
+
+logging:
+  level:
+    root: WARN
+    org.springframework.cloud.gateway: INFO 

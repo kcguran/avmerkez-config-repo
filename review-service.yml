@@ -1,63 +1,44 @@
-# =============================
-# review-service Configuration
-# =============================
+# ==========================
+# review-service Özel Ayarları
+# ==========================
+
+server:
+  port: ${SERVER_PORT:8085}
 
 spring:
-  # Datasource Configuration (review-service'e özel veritabanı)
+  application:
+    name: review-service
   datasource:
-    url: jdbc:postgresql://${DB_HOST:postgres_db}:${DB_PORT:5432}/review_db # Ortam değişkeni veya varsayılan
-    username: ${DB_USER:review_user} # Ortam değişkeni veya varsayılan
-    password: ${DB_PASSWORD:review_password} # *** GÜVENLİ YÖNETİLMELİ *** Ortam değişkeni veya Config Server şifrelemesi kullanın
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/review_db
+    username: ${DB_USER:review_user}
+    password: ${DB_PASSWORD:review_password} # *** GÜVENLİ YÖNETİLMELİ ***
     driver-class-name: org.postgresql.Driver
     hikari:
       connection-timeout: 20000
       maximum-pool-size: 10
-  flyway:
-      baseline-on-migrate: true # Yeni servis için uygun
-      locations: classpath:/db/migration/review # Servise özel migration path
-
-  # JPA/Hibernate Configuration
   jpa:
     hibernate:
-      ddl-auto: validate # Üretimde 'validate' veya 'none' kullanın, geliştirme için 'update' olabilir
-    show-sql: false # Üretimde false olmalı
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: false # Üretimde false olmalı
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration/review # VEYA sadece classpath:db/migration
 
-# Springdoc OpenAPI Configuration
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
+# Feign Client Ayarları (Örnek: Timeout - gerekirse)
+# feign:
+#  client:
+#    config:
+#      mall-service:
+#        connectTimeout: 5000
+#        readTimeout: 10000
+#      store-service:
+#        connectTimeout: 5000
+#        readTimeout: 10000
 
-# Management Endpoints
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health, info, prometheus, metrics, mappings, configprops, loggers # loggers eklenebilir
-  endpoint:
-    health:
-      show-details: when_authorized # veya always (geliştirme)
-
-# Feign Client Configuration (Servis Adları Eureka'dan çözülmeli)
-# Feign client'ların URL'leri genellikle Eureka gibi Service Discovery mekanizmaları
-# üzerinden otomatik olarak bulunur. Buraya sadece gerekirse özel ayarlar eklenir.
-# Örnek: feign.client.config.mall-service.connectTimeout=5000
-#        feign.client.config.mall-service.readTimeout=10000
-
-# Güvenlik Ayarları
-avmerkez:
-  security:
-    jwt:
-      secret: ${JWT_SECRET_KEY:fallback-secret-key-if-not-set} # *** KESİNLİKLE GÜVENLİ YÖNETİLMELİ *** Config Server şifrelemesi veya ortam değişkeni kullanın!
-
-# Loglama
+# Servise Özel Loglama
 logging:
   level:
-    com.avmerkez.reviewservice: INFO # Servis özel log seviyesi (prod için INFO veya WARN)
-    org.springframework.web: INFO
-    org.hibernate: WARN
+    com.avmerkez.reviewservice: DEBUG

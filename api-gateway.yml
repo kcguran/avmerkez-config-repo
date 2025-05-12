@@ -1,137 +1,41 @@
-# API Gateway Configuration
-# This file should be added to the Git repository used by the Config Server
+# =========================
+# api-gateway Özel Ayarları
+# =========================
 
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 spring:
+  application:
+    name: api-gateway
   cloud:
     gateway:
+      # Rota tanımlamaları (Eureka ile otomatik bulunabilir veya manuel tanımlanabilir)
       discovery:
         locator:
-          enabled: true
-          lower-case-service-id: true
-      routes:
-        # User Service Routes
-        - id: user-service
-          uri: lb://user-service
-          predicates:
-            - Path=/api/v1/auth/**
-          filters:
-            - RewritePath=/api/(?<segment>.*), /$\{segment}
+          enabled: true # Eureka'daki servisleri otomatik olarak rotalara ekle
+          lower-case-service-id: true # Servis ID'lerini küçük harfe çevir (örn: /mall-service/**)
+      # Örnek Manuel Rota Tanımı (Discovery locator kullanılıyorsa gerekmeyebilir)
+      # routes:
+      #   - id: mall_route
+      #     uri: lb://MALL-SERVICE # Eureka'dan servis adıyla yük dengeleme
+      #     predicates:
+      #       - Path=/api/v1/malls/**
+      #   - id: review_route
+      #     uri: lb://REVIEW-SERVICE
+      #     predicates:
+      #       - Path=/api/v1/reviews/**
+      #   # ... diğer servisler için rotalar
 
-        # Mall Service Routes
-        - id: mall-service
-          uri: lb://mall-service
-          predicates:
-            - Path=/api/v1/malls/**
-          filters:
-            - RewritePath=/api/(?<segment>.*), /$\{segment}
-            
-        # Store Service Routes
-        - id: store-service
-          uri: lb://store-service
-          predicates:
-            - Path=/api/v1/categories/**,/api/v1/brands/**,/api/v1/stores/**
-          filters:
-            - RewritePath=/api/(?<segment>.*), /$\{segment}
-            
-        # Review Service Routes
-        - id: review-service
-          uri: lb://review-service
-          predicates:
-            - Path=/api/v1/reviews/**
-          filters:
-            - RewritePath=/api/(?<segment>.*), /$\{segment}
-
-        # Swagger UI Routes
-        - id: openapi
-          uri: lb://api-gateway
-          predicates:
-            - Path=/v3/api-docs/**
-          filters:
-            - RewritePath=/v3/api-docs/(?<segment>.*), /$\{segment}/v3/api-docs
-
-# API Gateway Security Configuration
-avmerkez:
-  app:
-    jwtSecret: ${JWT_SECRET:changeitChangeitChangeitChangeitChangeitChangeitChangeitChangeit}
-    jwtCookieName: avm_jwt
-    jwtIssuer: avmerkez-user-service
-    jwtAudience: avmerkez-api
-
-# CORS Configuration
-cors:
-  allowed-origins: "*"
-  allowed-methods: GET, POST, PUT, DELETE, OPTIONS
-  allowed-headers: "*"
-  exposed-headers: Authorization
-  allow-credentials: true
-  max-age: 3600
-
-# Circuit Breaker Configuration
-resilience4j:
-  circuitbreaker:
-    instances:
-      default:
-        registerHealthIndicator: true
-        slidingWindowSize: 10
-        permittedNumberOfCallsInHalfOpenState: 3
-        slidingWindowType: COUNT_BASED
-        minimumNumberOfCalls: 5
-        waitDurationInOpenState: 5s
-        failureRateThreshold: 50
-        automaticTransitionFromOpenToHalfOpenEnabled: true
-
-# Log levels
-logging:
-  level:
-    root: INFO
-    org.springframework.cloud.gateway: INFO
-    org.springframework.cloud.gateway.route.RouteDefinitionLocator: INFO
-    reactor.netty: INFO
-
-# Enable detailed health info
+# API Gateway'e özel Actuator endpoint'leri
 management:
   endpoints:
     web:
       exposure:
-        include: health, info, gateway, prometheus
-  endpoint:
-    gateway:
-      enabled: true
-    health:
-      show-details: when_authorized
+        include: health, info, gateway, prometheus, metrics # gateway endpoint'ini ekle
 
-
-spring:
-  config:
-    activate:
-      on-profile: docker
-
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://discovery-server:8761/eureka
-  instance:
-    prefer-ip-address: true
-
+# Loglama
 logging:
   level:
-    root: INFO
-    org.springframework.cloud.gateway: INFO
-
-spring:
-  config:
-    activate:
-      on-profile: prod
-
-eureka:
-  instance:
-    secure-port-enabled: true
-    non-secure-port-enabled: false
-
-logging:
-  level:
-    root: WARN
-    org.springframework.cloud.gateway: INFO 
+    com.avmerkez.apigateway: DEBUG
+    org.springframework.cloud.gateway: INFO # Gateway loglarını yönet

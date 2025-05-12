@@ -1,0 +1,61 @@
+# ====================================
+# campaign-event-service Configuration
+# ====================================
+
+spring:
+  # Datasource Configuration (campaign-event-service'e özel veritabanı)
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:postgres_db}:${DB_PORT:5432}/campaign_event_db # Ortam değişkeni veya varsayılan
+    username: ${DB_USER:campaign_user} # Ortam değişkeni veya varsayılan
+    password: ${DB_PASSWORD:campaign_password} # *** GÜVENLİ YÖNETİLMELİ *** Ortam değişkeni veya Config Server şifrelemesi kullanın
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 10
+  flyway:
+      baseline-on-migrate: true
+      locations: classpath:/db/migration/campaignevent # Servise özel migration path
+
+  # JPA/Hibernate Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate # Üretimde 'validate' veya 'none'
+    show-sql: false # Üretimde false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false # Üretimde false
+
+# Springdoc OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+# Management Endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics, mappings, configprops, loggers
+  endpoint:
+    health:
+      show-details: when_authorized
+
+# Feign Client Configuration (Servis Adları Eureka'dan çözülmeli)
+# Gerekirse buraya mall-service, store-service, brand-service için
+# özel Feign ayarları (timeout vb.) eklenebilir.
+
+# Güvenlik Ayarları
+avmerkez:
+  security:
+    jwt:
+      secret: ${JWT_SECRET_KEY:fallback-secret-key-if-not-set} # *** KESİNLİKLE GÜVENLİ YÖNETİLMELİ *** Config Server şifrelemesi veya ortam değişkeni kullanın!
+
+# Loglama
+logging:
+  level:
+    com.avmerkez.campaigneventservice: INFO # Servis özel log seviyesi
+    org.springframework.web: INFO
+    org.hibernate: WARN

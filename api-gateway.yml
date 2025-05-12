@@ -3,39 +3,39 @@
 # =========================
 
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${SERVER_PORT:8080} # API Gateway portu
 
 spring:
   application:
     name: api-gateway
   cloud:
     gateway:
-      # Rota tanımlamaları (Eureka ile otomatik bulunabilir veya manuel tanımlanabilir)
+      # Servis Keşfi ile Otomatik Rota Tanımlama (Discovery Locator)
       discovery:
         locator:
-          enabled: true # Eureka'daki servisleri otomatik olarak rotalara ekle
-          lower-case-service-id: true # Servis ID'lerini küçük harfe çevir (örn: /mall-service/**)
-      # Örnek Manuel Rota Tanımı (Discovery locator kullanılıyorsa gerekmeyebilir)
-      # routes:
-      #   - id: mall_route
-      #     uri: lb://MALL-SERVICE # Eureka'dan servis adıyla yük dengeleme
-      #     predicates:
-      #       - Path=/api/v1/malls/**
-      #   - id: review_route
-      #     uri: lb://REVIEW-SERVICE
-      #     predicates:
-      #       - Path=/api/v1/reviews/**
-      #   # ... diğer servisler için rotalar
-
-# API Gateway'e özel Actuator endpoint'leri
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: user_service_route_login
+          uri: lb://USER-SERVICE # Eureka'daki USER-SERVICE'e yönlendir
+          predicates:
+            - Path=/api/v1/auth/login # Sadece login isteği için özel rota
+        - id: user_service_route_register
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/v1/auth/register
 management:
   endpoints:
     web:
       exposure:
-        include: health, info, gateway, prometheus, metrics # gateway endpoint'ini ekle
+        include: health, info, prometheus, metrics, gateway, configprops, loggers
+  endpoint:
+    gateway:
+      enabled: true
 
 # Loglama
 logging:
   level:
-    com.avmerkez.apigateway: DEBUG
-    org.springframework.cloud.gateway: INFO # Gateway loglarını yönet
+    com.avmerkez.apigateway: DEBUG # API Gateway kendi logları
+    org.springframework.cloud.gateway: INFO # Gateway'in iç işleyişi için log seviyesi
+    reactor.netty.http.client: INFO # Http client logları (DEBUG çok detaylı olabilir)

@@ -1,114 +1,63 @@
-# Review Service konfigürasyonu
-# Bu dosya, Config Server'ın bağlı olduğu Git repository'sine eklenmelidir
+# =============================
+# review-service Configuration
+# =============================
 
 spring:
+  # Datasource Configuration (review-service'e özel veritabanı)
   datasource:
-    url: jdbc:postgresql://postgres:5432/review_service_db
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: jdbc:postgresql://${DB_HOST:postgres_db}:${DB_PORT:5432}/review_db # Ortam değişkeni veya varsayılan
+    username: ${DB_USER:review_user} # Ortam değişkeni veya varsayılan
+    password: ${DB_PASSWORD:review_password} # *** GÜVENLİ YÖNETİLMELİ *** Ortam değişkeni veya Config Server şifrelemesi kullanın
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 10
+  flyway:
+      baseline-on-migrate: true # Yeni servis için uygun
+      locations: classpath:/db/migration/review # Servise özel migration path
+
+  # JPA/Hibernate Configuration
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: validate # Üretimde 'validate' veya 'none' kullanın, geliştirme için 'update' olabilir
+    show-sql: false # Üretimde false olmalı
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: false
-  flyway:
-    enabled: true
-    baseline-on-migrate: true
-    locations: classpath:db/migration
-    schemas: public
+        format_sql: false # Üretimde false olmalı
 
-server:
-  port: 8085
-  servlet:
-    context-path: /
+# Springdoc OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
 
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://discovery-server:8761/eureka
-  instance:
-    prefer-ip-address: true
+# Management Endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics, mappings, configprops, loggers # loggers eklenebilir
+  endpoint:
+    health:
+      show-details: when_authorized # veya always (geliştirme)
 
-# JWT konfigürasyonları - tüm servislerde aynı değerler kullanılmalıdır
+# Feign Client Configuration (Servis Adları Eureka'dan çözülmeli)
+# Feign client'ların URL'leri genellikle Eureka gibi Service Discovery mekanizmaları
+# üzerinden otomatik olarak bulunur. Buraya sadece gerekirse özel ayarlar eklenir.
+# Örnek: feign.client.config.mall-service.connectTimeout=5000
+#        feign.client.config.mall-service.readTimeout=10000
+
+# Güvenlik Ayarları
 avmerkez:
-  app:
-    jwtSecret: ${JWT_SECRET:changeitChangeitChangeitChangeitChangeitChangeitChangeitChangeitChangeit}
-    jwtExpirationMs: ${JWT_EXPIRATION:86400000} # 24 saat
-    jwtCookieName: avm_jwt
-    jwtRefreshCookieName: avm_refresh_token
-    jwtRefreshExpirationMs: ${JWT_REFRESH_EXPIRATION:604800000} # 7 gün
-    jwtIssuer: avmerkez-user-service
-    jwtAudience: avmerkez-api
-    serviceName: review-service
+  security:
+    jwt:
+      secret: ${JWT_SECRET_KEY:fallback-secret-key-if-not-set} # *** KESİNLİKLE GÜVENLİ YÖNETİLMELİ *** Config Server şifrelemesi veya ortam değişkeni kullanın!
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "health,info,prometheus"
-  endpoint:
-    health:
-      show-details: when_authorized
-
+# Loglama
 logging:
   level:
-    root: INFO
-    com.avmerkez: INFO
+    com.avmerkez.reviewservice: INFO # Servis özel log seviyesi (prod için INFO veya WARN)
     org.springframework.web: INFO
-    org.hibernate.SQL: INFO
-
-# Docker profili
----
-spring:
-  config:
-    activate:
-      on-profile: docker
-  datasource:
-    url: jdbc:postgresql://postgres:5432/review_service_db
-
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://discovery-server:8761/eureka
-  instance:
-    preferIpAddress: true
-
-# Production profili
----
-spring:
-  config:
-    activate:
-      on-profile: prod
-  jpa:
-    show-sql: false
-    properties:
-      hibernate:
-        format_sql: false
-  datasource:
-    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:review_service_db}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-
-eureka:
-  instance:
-    secure-port-enabled: true
-    non-secure-port-enabled: false
-
-logging:
-  level:
-    root: WARN
-    com.avmerkez: INFO
-    org.springframework: WARN
     org.hibernate: WARN
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "health,info,prometheus"
-  endpoint:
-    health:
-      show-details: when-authorized 

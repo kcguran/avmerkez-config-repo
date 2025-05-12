@@ -1,0 +1,38 @@
+# ================================
+# notification-service Özel Ayarları
+# ================================
+
+server:
+  port: ${SERVER_PORT:8087}
+
+spring:
+  application:
+    name: notification-service
+  # Kafka Consumer Ayarları (notification-service'e özel)
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: notification-group-${HOSTNAME:local} # Grup ID'sini ortam/makine bazlı ayırmak faydalı olabilir
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        # Güvenilir paketleri belirtin (birden fazla olabilir)
+        spring.json.trusted.packages: "com.avmerkez.userservice.dto.event, com.avmerkez.notificationservice.dto.event"
+        # Eğer mesajda __TypeId__ başlığı yoksa varsayılan tipi belirtin
+        # spring.json.value.default.type: "com.avmerkez.userservice.dto.event.UserRegisteredEventDto"
+        # Hata yönetimi için ayarlar (opsiyonel)
+        # spring.kafka.listener.missing-topics-fatal: false
+        # spring.kafka.consumer.enable-auto-commit: false # Manuel commit için false yapın
+
+# Uygulamaya özel Kafka Topic Adları
+avmerkez:
+  kafka:
+    topics:
+      user-registration: ${KAFKA_TOPIC_USER_REGISTRATION:user-registration-events}
+
+# Servise Özel Loglama
+logging:
+  level:
+    com.avmerkez.notificationservice: DEBUG
+    org.springframework.kafka: INFO # Kafka client logları

@@ -10,7 +10,7 @@ spring:
     name: mall-service # Tekrar belirtmekte fayda var
   # Veritabanı Bağlantısı (mall-service'e özel)
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/mall_db
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/mall_db
     username: ${DB_USER:user}
     password: ${DB_PASSWORD:password} # *** GÜVENLİ YÖNETİLMELİ ***
     driver-class-name: org.postgresql.Driver

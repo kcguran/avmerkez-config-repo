@@ -8,28 +8,24 @@ server:
 spring:
   application:
     name: user-service
-  # Veritabanı Bağlantısı (user-service'e özel)
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/user_db
-    username: ${DB_USER:user_svc_user}
-    password: ${DB_PASSWORD:user_svc_password} # *** GÜVENLİ YÖNETİLMELİ ***
+    username: ${DB_USER:user}
+    password: ${DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
     hikari:
       connection-timeout: 20000
       maximum-pool-size: 10
-  # JPA/Hibernate (user-service'e özel)
   jpa:
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-  # Flyway (user-service'e özel migration path)
   flyway:
     enabled: true
     baseline-on-migrate: true
-    locations: classpath:db/migration/user # VEYA sadece classpath:db/migration
-  # Kafka Producer Ayarları (user-service'e özel)
+    locations: classpath:db/migration
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
@@ -38,23 +34,11 @@ spring:
       properties:
         # spring.json.add.type.headers: false # Eğer consumer'ların type header'a ihtiyacı yoksa
 
-# Uygulamaya özel JWT ve Kafka Topic Adları
 avmerkez:
-  app: # JWT ayarları merkezi application.yml'den devralınır, sadece topic burada kalabilir
+  app:
     kafka:
       topics:
         user-registration: ${KAFKA_TOPIC_USER_REGISTRATION:user-registration-events}
-  # JWT ayarları burada override edilebilir ama merkezi application.yml'de olması daha iyi.
-  # security:
-  #  jwt:
-  #    expirationMs: ${JWT_EXPIRATION_MS:3600000}
-  #    refreshExpirationMs: ${JWT_REFRESH_EXPIRATION_MS:604800000}
-  #    cookieName: ${JWT_COOKIE_NAME:avm_jwt}
-  #    refreshCookieName: ${JWT_REFRESH_COOKIE_NAME:avm_refresh_token}
-  #    issuer: ${JWT_ISSUER:avmerkez-user-service}
-  #    audience: ${JWT_AUDIENCE:avmerkez-api}
-
-# Servise Özel Loglama
 logging:
   level:
     com.avmerkez.userservice: DEBUG

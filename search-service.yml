@@ -1,1 +1,60 @@
+spring:
+  application:
+    name: search-service
+  profiles:
+    active: default
+  data:
+    elasticsearch:
+      cluster-nodes: elasticsearch:9200
+      cluster-name: elasticsearch
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      group-id: search-service-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.avmerkez.*
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
+server:
+  port: 8085
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://discovery-server:8761/eureka
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+jwt:
+  secret: ${JWT_SECRET:YVZtZXJrZXpfand0X3NlY3JldF8xMjM0NTY3ODkwX3NlYXJjaF9zZXJ2aWNl}
+  expiration: 86400000
+  issuer: avmerkez-auth
+  audience: avmerkez-services
+
+app:
+  elasticsearch:
+    index-name: avmerkez
+    mall-index: malls
+    store-index: stores
+    event-index: events
+    campaign-index: campaigns
+  feign:
+    user-service: user-service
+    mall-service: mall-service
+
+logging:
+  level:
+    root: INFO
+    com.avmerkez: DEBUG
+    org.springframework.data.elasticsearch: INFO

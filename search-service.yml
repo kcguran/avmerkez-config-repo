@@ -23,25 +23,6 @@ spring:
 server:
   port: 8085
 
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://discovery-server:8761/eureka
-  instance:
-    prefer-ip-address: true
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-
-jwt:
-  secret: ${JWT_SECRET:YVZtZXJrZXpfand0X3NlY3JldF8xMjM0NTY3ODkwX3NlYXJjaF9zZXJ2aWNl}
-  expiration: 86400000
-  issuer: avmerkez-auth
-  audience: avmerkez-services
-
 app:
   elasticsearch:
     index-name: avmerkez
@@ -52,9 +33,3 @@ app:
   feign:
     user-service: user-service
     mall-service: mall-service
-
-logging:
-  level:
-    root: INFO
-    com.avmerkez: DEBUG
-    org.springframework.data.elasticsearch: INFO

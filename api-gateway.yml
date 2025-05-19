@@ -24,6 +24,14 @@ spring:
   cloud:
     gateway:
       routes:
+        - id: user_service_route_login
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/v1/auth/login
+        - id: user_service_route_register
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/api/v1/auth/register
         - id: search-service
           uri: lb://search-service
           predicates:
@@ -40,22 +48,11 @@ spring:
             redis-rate-limiter.replenishRate: 5
             redis-rate-limiter.burstCapacity: 10
             redis-rate-limiter.requestedTokens: 1
-  cloud:
-    gateway:
-      # Servis Keşfi ile Otomatik Rota Tanımlama (Discovery Locator)
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
-      routes:
-        - id: user_service_route_login
-          uri: lb://USER-SERVICE # Eureka'daki USER-SERVICE'e yönlendir
-          predicates:
-            - Path=/api/v1/auth/login # Sadece login isteği için özel rota
-        - id: user_service_route_register
-          uri: lb://USER-SERVICE
-          predicates:
-            - Path=/api/v1/auth/register
+        
 management:
   endpoints:
     web:
@@ -68,6 +65,6 @@ management:
 # Loglama
 logging:
   level:
-    com.avmerkez.apigateway: DEBUG # API Gateway kendi logları
-    org.springframework.cloud.gateway: INFO # Gateway'in iç işleyişi için log seviyesi
-    reactor.netty.http.client: INFO # Http client logları (DEBUG çok detaylı olabilir)
+    com.avmerkez.apigateway: DEBUG
+    org.springframework.cloud.gateway: INFO
+    reactor.netty.http.client: INFO

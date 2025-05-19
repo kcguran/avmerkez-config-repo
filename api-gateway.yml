@@ -2,6 +2,16 @@
 # api-gateway Özel Ayarları
 # =========================
 
+avmerkez:
+  app:
+    jwtSecret: "c2VjcmV0IGtleSBtdXN0IGJlIGxvbmcgdGhhbiAyNTYgYml0cw=="
+    jwtCookieName: avm_jwt
+    jwtRefreshCookieName: avm_refresh_token
+    jwtIssuer: avmerkez-user-service
+    jwtAudience: avmerkez-api
+    jwtExpirationMs: 3600000
+    jwtRefreshExpirationMs: 604800000 
+
 server:
   port: ${SERVER_PORT:8080} # API Gateway portu
 
